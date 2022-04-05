@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"strings"
 )
 
 type ResourceInfo struct {
@@ -104,6 +105,9 @@ func (r *Reconciler) createRequestedRules(cr *v1.Observability, ctx context.Cont
 			}, requestedLabels)
 			// Inject managed labels for each rule
 			injectIdLabel(parsedRule, rule.Id)
+
+			// Inject profile type label for each rule
+			injectProfileTypeLabel(parsedRule)
 			return nil
 		})
 		if err != nil {
@@ -156,6 +160,24 @@ func injectIdLabel(rule *v12.PrometheusRule, id string) {
 				rule.Spec.Groups[i].Rules[j].Labels = make(map[string]string)
 			}
 			rule.Spec.Groups[i].Rules[j].Labels[PrometheusRuleIdentifierKey] = id
+		}
+	}
+}
+
+func injectProfileTypeLabel(rule *v12.PrometheusRule) {
+	for i := 0; i < len(rule.Spec.Groups); i++ {
+		for j := 0; j < len(rule.Spec.Groups[i].Rules); j++ {
+			if rule.Spec.Groups[i].Rules[j].Labels == nil {
+				rule.Spec.Groups[i].Rules[j].Labels = make(map[string]string)
+			}
+
+			if strings.Contains(rule.Spec.Groups[i].Rules[j].Expr.StrVal, "bf2_org_kafkaInstanceProfileType!=\"trial\"") {
+				// Set the type to standard
+				rule.Spec.Groups[i].Rules[j].Labels[PrometheusRuleProfileTypeKey] = PrometheusRuleProfileTypeTrial
+			} else {
+				// Set the type to trial
+				rule.Spec.Groups[i].Rules[j].Labels[PrometheusRuleProfileTypeKey] = PrometheusRuleProfileTypeStandard
+			}
 		}
 	}
 }

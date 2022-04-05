@@ -25,12 +25,15 @@ import (
 )
 
 const (
-	RemoteRepository            = "repository"
-	RemoteAccessToken           = "access_token"
-	RemoteChannel               = "channel"
-	RemoteTag                   = "tag"
-	PrometheusRuleIdentifierKey = "observability"
-	DefaultChannel              = "resources"
+	RemoteRepository                  = "repository"
+	RemoteAccessToken                 = "access_token"
+	RemoteChannel                     = "channel"
+	RemoteTag                         = "tag"
+	PrometheusRuleIdentifierKey       = "observability"
+	DefaultChannel                    = "resources"
+	PrometheusRuleProfileTypeKey      = "type"
+	PrometheusRuleProfileTypeStandard = "standard"
+	PrometheusRuleProfileTypeTrial    = "trial"
 )
 
 type Reconciler struct {
