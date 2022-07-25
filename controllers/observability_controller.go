@@ -14,6 +14,8 @@ import (
 	storage "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	infrastructure "github.com/openshift/api/config/v1"
+
 	"github.com/go-logr/logr"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/redhat-developer/observability-operator/v3/controllers/model"
@@ -72,6 +74,7 @@ type ObservabilityReconciler struct {
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;create;update;delete;watch
 
 func (r *ObservabilityReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+
 	ctx := context.Background()
 	log := r.Log.WithValues("observability", req.NamespacedName)
 
@@ -202,6 +205,18 @@ func (r *ObservabilityReconciler) InitializeOperand(mgr ctrl.Manager) error {
 	// controller/cache will not be ready during operator 'setup', use manager client & API Reader instead
 	mgrClient := mgr.GetClient()
 	apiReader := mgr.GetAPIReader()
+
+	cluster := client.ObjectKey{
+		Name: "cluster",
+	}
+
+	infra := &infrastructure.Infrastructure{}
+	err = r.Get(context.Background(), cluster, infra)
+	if err != nil {
+		r.Log.Info("Didn't work")
+	}
+
+	r.Log.Info(string(infra.Status.PlatformStatus.Type))
 
 	// don't initialise the operand if the following config map is found in the operator namespace
 	configMap := &v1.ConfigMap{
